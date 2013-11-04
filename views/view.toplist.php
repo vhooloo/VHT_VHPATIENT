@@ -27,7 +27,7 @@ class VHT_VHPATIENTViewTopList extends ViewList {
 			//var_dump( $this->params);
 			//$savedSearchName = empty($_REQUEST['saved_search_select_name']) ? '' : (' - ' . $_REQUEST['saved_search_select_name']);
 			//echo get_form_header($GLOBALS['mod_strings']['LBL_LIST_FORM_TITLE'] . $savedSearchName, '', false);
-			echo $this->lv->display();
+			//echo $this->lv->display();
 		//}
 		//parent::listViewProcess();
 	}

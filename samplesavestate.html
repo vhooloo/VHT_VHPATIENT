@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+
+
+<!--accepted
+You can create your AJAX in a JS file in the custom directory...
+
+custom/modules/Project/javascript/ajax.js
+
+function updateStatus(project_task_id) {
+    if (project_task_id) {
+        $.ajax({
+            url: 'index.php?to_pdf=true&module=Project&action=ChangeProjectTaskStatus&id=' + project_task_id,
+            success: function() {
+
+            // Reload subpanel
+            showSubPanel('projects_project_tasks', null, true);
+        }
+    });
+}
+Then create a new PHP file with the action matching the file name…
+
+custom/modules/Project/ChangeProjectTaskStatus.php
+-->
+<!--?php
+    if (!defined('sugarEntry') || !sugarEntry)
+        die('Not A Valid Entry Point');
+
+    $project_task = BeanFactory::getBean('ProjectTask');
+    $project_task->retrieve($_GET['project_task_id']);
+
+    // Update status logic goes here
+
+    $project_task->save();
+
+    exit();
+
+-->	
+<html lang="en">
+@{
+    ViewBag.Title = "SaveState";
+}
+<head>
+    <link rel="stylesheet" href="../../jqwidgets/styles/jqx.base.css" type="text/css" />
+    <script type="text/javascript" src="../../scripts/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxcore.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxdata.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxbuttons.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxscrollbar.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxlistbox.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxdropdownlist.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxmenu.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.pager.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.sort.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.filter.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.storage.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.columnsresize.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.columnsreorder.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxgrid.selection.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxpanel.js"></script>
+    <script type="text/javascript" src="../../jqwidgets/jqxcheckbox.js"></script>
+    <script type="text/javascript" src="../../scripts/gettheme.js"></script>
+    <script type="text/javascript">
+        var viewcontent = '';
+        var loaddata = '';
+        $(document).ready(function () {
+            var theme = "";
+            // prepare the data
+            LoadGrid();
+            $("#saveState").jqxButton({ theme: theme });
+            $("#loadState").jqxButton({ theme: theme });
+            $("#hide").jqxButton({ theme: theme });
+            var state = null;
+            $("#saveState").click(function () {
+                // save the current state of jqxGrid.
+                state = $("#jqxgrid").jqxGrid('getstate');
+                viewcontent = JSON.stringify(state);
+                var d = { viewcontent: viewcontent }
+                $.ajax({
+                    datatype: 'json',
+                    type: 'POST',
+                    data: d,
+                    url: '@Url.Action("SaveLayout", "SaveState")',
+                    success: function (result) {
+                        alert(result);
+                    },
+                    error: function (result, n, r) {
+                        alert(result.statusText);
+                    }
+                });
+            });
+            $("#loadState").click(function () {
+                // load the Grid's state.
+                alert(loaddata.viewcontent);
+                var obj = JSON.parse(loaddata.viewcontent);
+                $("#jqxgrid").jqxGrid('loadstate', obj);
+            });
+            $("#hide").click(function () {
+                $("#jqxgrid").jqxGrid('hidecolumn', 'ShipCity');
+            });
+        });
+        function LoadGrid() {
+            var source =
+             {
+                 datatype: "json",
+                 datafields: [
+                 { name: 'ShipName', map: 'ShipName' },
+                 { name: 'ShipCity', map: 'ShipCity' },
+                 { name: 'ShipCountry', map: 'ShipCountry' }
+                 ],
+                 url: '@Url.Action("GetData", "SaveState")',
+                 root: 'entry',
+                 type: 'GET',
+                 pager: function (pagenum, pagesize, oldpagenum) {
+                     // callback called when a page or page size is changed.
+                 },
+                 filter: function () {
+                     // update the grid and send a request to the server.
+                     $("#jqxgrid").jqxGrid('updatebounddata', 'filter');
+                 },
+                 beforeprocessing: function (data) {
+                     source.totalrecords = data.TotalCount;
+                     loaddata = data;
+                 }
+             };
+             BindSource(source);
+         }
+         function BindSource(source) {
+             var theme = getDemoTheme();
+             var dataAdapter = new $.jqx.dataAdapter(source);
+             $("#jqxgrid").jqxGrid(
+             {
+                 width: 670,
+                 source: dataAdapter,
+                 theme: theme,
+                 selectionmode: 'multiplerowsextended',
+                 sortable: true,
+                 pageable: true,
+                 virtualmode: true,
+                 autoheight: true,
+                 autoloadstate: false,
+                 autosavestate: false,
+                 columnsresize: true,
+                 columnsreorder: true,
+                 showfilterrow: true,
+                 filterable: true,
+                 rendergridrows: function () {
+                     return dataAdapter.records;
+                 },
+                 ready: function () {
+                     $('#jqxgrid').jqxGrid('autoresizecolumns');
+                 },
+                 columns: [
+                   { text: 'Ship Name', filtercondition: 'starts_with', datafield: 'ShipName', width: 250 },
+                   { text: 'Ship City', datafield: 'ShipCity', width: 200 },
+                   { text: 'Ship Country', datafield: 'ShipCountry', width: 200 }
+                 ]
+             });
+         }
+    </script>
+</head>
+<body class='default'>
+    <div id='jqxWidget' style="font-size: 13px; font-family: Verdana; float: left;">
+        <div id="jqxgrid">
+        </div>
+        <div style="margin-top: 30px;">
+            <input type="button" id="saveState" value="Save State" />
+            <input type="button" id="loadState" value="Load State" />
+            <input type="button" id="hide" value="Hide Ship City" />
+        </div>
+    </div>
+</body>
+</html>

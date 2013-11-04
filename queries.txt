@@ -1,3 +1,16 @@
+ANDREW 	GIBSON 	91632488-2272-60ef-a37e-51d2fab85f4a 	2013-07-02 16:04:44 	NULL
+Sally 	Bizzell 	7bde8e7a-9057-9660-96b7-51d42e4c1116 	2013-07-03 14:02:22 	NULL
+Loreen 	Ruffin 	8e0a8265-e7d9-039c-3269-51d42f8dd0c6 	2013-07-03 14:05:01 	NULL
+Barbara 	Hunt 	4ae14102-1fa2-3ad7-1290-51d42ce9fbe1 	2013-07-03 13:52:36 	NULL
+Eddie 	Murphy 	96119080-5ced-0451-f79e-51d42e0aaa61 	2013-07-03 14:01:00 	NULL
+Susan 	Cleghorn 	aa6d00db-0138-239d-6623-51e7ea515ba0 	2013-07-18 13:16:07 	NULL
+KATHY 	BARNES 	cd8410c6-d1a7-04ca-f719-51d2fa32eb51 	2013-07-02 16:05:57 	NULL
+John 	Cena 	e1bd50ba-bcb2-2549-3094-50bb133a8ff6 	2012-12-02 08:39:06 	NULL
+Carole 	Heisig 	12bf029e-da53-67a8-558f-51d43286a757 	2013-07-03 14:15:54 	NULL
+Tanya 	Hayes 	6c70676c-2669-a238-bb4a-51d4303f7331 	2013-07-03 14:07:19 	NULL
+
+
+
 SELECT date_entered, date_modified, next_refill, risklvl_c,  FROM ( SELECT  ENC_ID, next_rx_refill_due_c next_refill, risklvl_c FROM ( SELECT reg_patient_reg_encounterreg_patient_ida PAT_ID, reg_patient_reg_encounterreg_encounter_idb ENC_ID FROM reg_patient_reg_encounter_c WHERE reg_patient_reg_encounterreg_patient_ida = '$id_pat') PAT_ENC_REL, reg_encounter_cstm 
 
 WHERE reg_encounter_cstm.ID_C = PAT_ENC_REL.ENC_ID ) PAT_ENC_REL1, reg_encounter WHERE PAT_ENC_REL1.ENC_ID = reg_encounter.id AND next_refill IS NOT NULL 
@@ -192,4 +205,9 @@ reg_patient_reg_encounter_c tab1  , reg_provider p1b, reg_provider_reg_patient_c
 
  SELECT tab4.first_name fname, tab4.last_name lname, tab1.date_modified, tab3.next_rx_refill_due_c refill, tab2.pat patid, tab5.mrn_c mrn, p1b.name provname FROM reg_patient_reg_encounter_c tab1, ( SELECT max( date_modified ) dat, reg_patient_reg_encounterreg_patient_ida pat FROM reg_patient_reg_encounter_c GROUP BY reg_patient_reg_encounterreg_patient_ida) tab2, reg_encounter_cstm tab3, reg_patient tab4, reg_patient_cstm tab5, reg_provider p1b, reg_provider_reg_patient_c p2b WHERE tab1.date_modified = tab2.dat AND tab1.reg_patient_reg_encounterreg_patient_ida = tab2.pat AND tab3.id_c = tab1.reg_patient_reg_encounterreg_encounter_idb AND tab4.id = tab2.pat AND tab5.id_c = tab4.id  AND p2b.reg_provider_reg_patientreg_provider_ida = p1b.id  AND p2b.reg_provider_reg_patientreg_patient_idb = tab4.id AND tab3.next_rx_refill_due_c BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)
 
-
+/* base query 10/21*/
+SELECT tab4.first_name fname, tab4.last_name lname,  tab5.mrn_c mrn, tab4.id patid, ( SELECT tab1.reg_patient_reg_encounterreg_encounter_idb enclink  FROM reg_patient_reg_encounter_c tab1 WHERE  tab1.reg_patient_reg_encounterreg_patient_ida = patid AND tab1.date_modified = (SELECT max( date_modified ) dat FROM reg_patient_reg_encounter_c enc1 WHERE  enc1.reg_patient_reg_encounterreg_patient_ida = patid) )  enclink, ( SELECT DATE_FORMAT(tab3.next_rx_refill_due_c,"%m/%d/%Y") ref1 FROM reg_encounter_cstm tab3 where tab3.id_c = enclink )  refill,  ( SELECT DATE_FORMAT(tab3.next_uts_due_c,"%m/%d/%Y") uts11 FROM reg_encounter_cstm tab3 where tab3.id_c = enclink )  uts , (SELECT p1b.name provname  from reg_provider p1b, reg_provider_reg_patient_c p2b  WHERE p2b.reg_provider_reg_patientreg_provider_ida = p1b.id  AND p2b.reg_provider_reg_patientreg_patient_idb = patid) provname 
+FROM reg_patient tab4, reg_patient_cstm tab5, reg_patient_reg_encounter_c tab1, ( SELECT max( date_modified ) dat, reg_patient_reg_encounterreg_patient_ida pat FROM reg_patient_reg_encounter_c GROUP BY reg_patient_reg_encounterreg_patient_ida) tab2, reg_encounter_cstm tab3 WHERE  tab5.id_c = tab4.id  AND tab1.date_modified = tab2.dat AND tab1.reg_patient_reg_encounterreg_patient_ida = tab2.pat AND tab3.id_c = tab1.reg_patient_reg_encounterreg_encounter_idb  AND tab4.id = tab2.pat  ;
+ 
+ 
+ SELECT tab4.first_name fname, tab4.last_name lname, tab5.mrn_c mrn, tab4.id patid , DATE_FORMAT(tab3.next_rx_refill_due_c,"%m/%d/%Y") refill, DATE_FORMAT(tab3.next_uts_due_c,"%m/%d/%Y") uts , (SELECT p1b.name provname from reg_provider p1b, reg_provider_reg_patient_c p2b WHERE p2b.reg_provider_reg_patientreg_provider_ida = p1b.id AND p2b.reg_provider_reg_patientreg_patient_idb = patid) provname FROM reg_patient tab4, reg_patient_cstm tab5 , reg_patient_reg_encounter_c tab1, ( SELECT max( date_modified ) dat, reg_patient_reg_encounterreg_patient_ida pat FROM reg_patient_reg_encounter_c GROUP BY reg_patient_reg_encounterreg_patient_ida) tab2, reg_encounter_cstm tab3 WHERE tab5.id_c = tab4.id AND tab1.date_modified = tab2.dat AND tab1.reg_patient_reg_encounterreg_patient_ida = tab2.pat AND tab3.id_c = tab1.reg_patient_reg_encounterreg_encounter_idb AND tab4.id = tab2.pat AND tab3.next_rx_refill_due_c BETWEEN  str_to_date("10/12/2010", "%m/%d/%Y") AND str_to_date("10/30/2013", "%m/%d/%Y")  ORDER BY refill DESC, provname ASC
