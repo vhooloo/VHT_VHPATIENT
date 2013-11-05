@@ -38,6 +38,8 @@ this.document.location.href = location;
     <script type="text/javascript" src="custom/topcarejs/jqwidgets/jqxgrid.selection.js"></script>
     <script type="text/javascript" src="custom/topcarejs/jqwidgets/jqxcheckbox.js"></script>
 	<script type="text/javascript" src="custom/topcarejs/jqwidgets/jqxgrid.sort.js"></script>
+	<script type="text/javascript" src="custom/topcarejs/jqwidgets/jqxcalendar.js"></script>
+    <script type="text/javascript" src="custom/topcarejs/jqwidgets/jqxdatetimeinput.js"></script>
     <!--script type="text/javascript" src="../../scripts/gettheme.js"></script>
     <script type="text/javascript" src="generatedata.js"></script-->
     
@@ -71,6 +73,20 @@ after
 
 {literal}
 	<script type="text/javascript">
+	var refilldaysselect;
+	function refillfilter(value) {
+      refilldaysselect = parseInt(value);
+	  alert(refilldaysselect);
+	  var filtergroup = new $.jqx.filter();
+	  var filterlo = filtergroup.createfilter('datefilter', '11/1/2013', 'GREATER_THAN_OR_EQUAL');
+	  var filterhi = filtergroup.createfilter('datefilter', '11/10/2013', 'LESS_THAN_OR_EQUAL');
+	  filtergroup.addfilter(0, filterlo);
+	  filtergroup.addfilter(0, filterhi);
+	  $('#jqxgrid').jqxGrid('addfilter', 'refill', filtergroup, true);
+
+	}
+	
+	
 		$(window).load(function() {
         //$(document).load(function () {
 
@@ -102,10 +118,10 @@ after
 
 		row["patientname"] = "{$myrowData.lname}, {$myrowData.fname}" ;
 		row["mrn"] 			= "{$myrowData.mrn}";
-		row["refill"] 		= "{$myrowData.refill}";
+		row["refill"] 		= "{$myrowData.refill|date_format:'%m/%d/%Y'}";
 		row["uts"] 			= "{$myrowData.uts}";
 		row["pcp"] 			= "{$myrowData.provname}";
-		row["action"] 		= "Action";
+		row["action"] 		= "{$myrowData.patid}";
 		data[i] = row;
 	    i = i + 1;
 	{/foreach}
@@ -119,7 +135,7 @@ after
                 [
                     { name: 'patientname', type: 'string' },
 					{ name: 'mrn', type: 'string' },
-                    { name: 'refill', type: 'string' },
+                    { name: 'refill', type: 'date' },
                     { name: 'uts', type: 'string' },
                     { name: 'pcp', type: 'string'},
                     { name: 'action', type: 'string' }
@@ -132,8 +148,15 @@ after
 	var linkrenderer = function (row, column, value) {
                 
                 //return '<div id="patid'+row+'"class="dropdown dropdown-tip"> <ul class="dropdown-menu"> <li><a href="./index.php?module=REG_Patient&action=PrescriptionRefill&record=1">Refill</a></li>  <li><a href="./index.php?module=REG_Patient&action=PatientEncounter&record=2">Encounter</a></li></ul> </div><input type="button" value="Action" data-dropdown="#patid'+row+'" class="">	';
-				return '<select id="mysort'+row+'" name="mysort'+row+'" onchange="if (document.getElementById(\'mysort'+row+'\').selectedIndex ==1 ) loadUrl(\'./index.php?module=REG_Patient&action=PrescriptionRefill&record=3671592e-58b5-6b8c-1643-510185ae4e7f\'); else loadUrl(\'./index.php?module=REG_Patient&action=PatientEncounter&record=3671592e-58b5-6b8c-1643-510185ae4e7f\');"> <option value="all"  selected>Action</option><option value="7" >Refill</option>	<option value="14" >Encounter</option>	</select>';
+				return '<select id="mysort'+row+'" name="mysort'+row+'" onchange="if (document.getElementById(\'mysort'+row+'\').selectedIndex ==1 ) loadUrl(\'./index.php?module=REG_Patient&action=PrescriptionRefill&record='+value+'\'); else loadUrl(\'./index.php?module=REG_Patient&action=PatientEncounter&record='+value+'\');"> <option value="Action"  selected>Action</option><option value="Refill" >Refill</option><option value="Enc" >Encounter</option>	</select>';
     }
+	
+	var columnsrenderer = function (value) {
+	//return '<div style="text-align: center; margin-top: 5px;">' + value + '</div>';
+	return '<div><select id="mysortabc" name="mysortabc" onchange="switch(document.getElementById(\'mysortabc\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7); break;  case 2: refillfilter(14);break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 days</option>	</select></div>'
+	}
+	
+	
 			
 	var dataAdapter = new $.jqx.dataAdapter(source);
 	$("#jqxgrid").jqxGrid(
@@ -146,10 +169,10 @@ after
 		columns: [
 			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 100,sortable: true },
 			{ text: 'MRN', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'mrn', width: 100},
-			{ text: 'Refill Date', filtertype: 'textbox', datafield: 'refill', width: 180 },
-			{ text: 'UTS', datafield: 'uts', filtertype: 'textbox', width: 80, cellsalign: 'right' },
+			{ text: 'Refill Date', filtertype: 'date', datafield: 'refill', width: 180, cellsformat: 'd', renderer:columnsrenderer, sortable:false },
+			{ text: 'UTS', datafield: 'uts', filtertype: 'list', filteritems: ['Next 7 Days'], width: 80, cellsalign: 'right' },
 			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 90, cellsalign: 'right', cellsformat: 'c2' },
-			{ text: 'Action', datafield: 'action', filtertype: 'textbox', width: 100,  cellsrenderer:linkrenderer }
+			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer }
 		]
 	})
 	
@@ -209,15 +232,17 @@ after
       });            
 	$("#loadState").click(function () {
 		// load the Grid's state.
-
+		
 		if (state) {
-		    alert('found state');
+		  
 			$("#jqxgrid").jqxGrid('loadstate', state);
 		}
 		else {
-		    alert('state not found');
+		 
 			$("#jqxgrid").jqxGrid('loadstate');
 		}
+		alert(refilldaysselect);
+        if (refilldaysselect == 7) $("#mysortabc").val("Refill7");
 	});
 	
 	}); //window load function
