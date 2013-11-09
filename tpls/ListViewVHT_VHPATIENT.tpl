@@ -16,8 +16,10 @@ function loadUrl(location)
 	var state = $("#jqxgrid").jqxGrid('savestate');
 	var viewcontent = JSON.stringify(state);
 	var e = document.getElementById("mysortrefill");
+	ddarray[0].sessionparam();
 	//alert(viewcontent);
-	var params = "id=mysortrefill&value=" + e.options[e.selectedIndex].value + "&id=jqxgridstate&value="+viewcontent;
+	var params = "&jqxgridstate="+viewcontent+ddarray[0].params;
+	
 
     alert(params);
 //Send the proper header information along with the request
@@ -44,20 +46,44 @@ xmlhttp.send(params);
   this.document.location.href = location;
 }
 
-function datedropdown(name,label, data, id)
+function datedropdown(name,label, data, id, prev)
 {
 	 this.name 		= name;
 	 this.label		= label;
 	 this.data      = data;
 	 this.id        = parseInt(id);
-	 this.test      = 'bar';
-	 this.render 	= '<div>'+this.label+'<select style="width:75px;" id="'+this.name+'" name="'+this.name+'" onchange="switch(document.getElementById(\''+this.name+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.name+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+	 this.params   = 'bar';
+	 this.previous  = prev;
+	 this.render 	= '<div>'+this.label+'<select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
      this.refillfilter = refillfilter;
+	 this.sessionparam = sessionparam;
+	 this.renderprevious = renderprevious;
 	 
+	 function renderprevious() {
+	   if (prev != "" || prev != undefined )  document.getElementById(this.data).value = this.previous;
+	 }
 	 
 	 function refillfilter(days){
-	    alert('me');
-	 }
+	  var refilldaysselect = parseInt(days);
+
+	  var filtergroup = new $.jqx.filter();
+	  //var filterlo = filtergroup.createfilter('datefilter', '11/7/2013', 'GREATER_THAN_OR_EQUAL');
+	  var filterhi = filtergroup.createfilter('datefilter', '11/14/2013', 'LESS_THAN_OR_EQUAL');
+	  //var filterover = filtergroup.createfilter('datefilter', '11/7/2013', 'LESS_THAN_OR_EQUAL');
+	  var filterbot  = filtergroup.createfilter('datefilter', '01/01/2013', 'GREATER_THAN_OR_EQUAL');
+	  //filtergroup.addfilter(0, filterlo);
+
+	 
+	  	filtergroup.addfilter(0, filterbot);
+		filtergroup.addfilter(0, filterhi);
+		$('#jqxgrid').jqxGrid('addfilter', this.data, filtergroup, true);
+	}
+	
+	function sessionparam() {
+	var e = document.getElementById(this.data);
+	//alert(viewcontent);
+	this.params =  "&"+this.data+"="+ e.options[e.selectedIndex].value; 
+	}
 	
 }
 
@@ -167,9 +193,9 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	
 	var ddarray = new Array();
 	
-	var dd = new datedropdown('value', 'label', 'data', '0');
+	var dd = new datedropdown('Next PCP', 'Next PCP', 'next_pcp', '0', {/literal}'{$smarty.session.next_pcp}'{literal});
 	ddarray.push(dd);
-	ddarray[0].refillfilter(1);
+	
 	
 	function inactivefilter(inactiveflag) {
 	
@@ -302,6 +328,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	 }	
 	 else inactivefilter(false);
 	document.getElementById("inactivecheck").checked = setinactive;
+	ddarray[0].renderprevious();
 	
 	data.sort(function(a,b) {
 	 /*if (a.productname < b.productname)
