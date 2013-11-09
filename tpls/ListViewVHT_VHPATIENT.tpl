@@ -15,10 +15,11 @@ function loadUrl(location)
 
 	var state = $("#jqxgrid").jqxGrid('savestate');
 	var viewcontent = JSON.stringify(state);
+	var e = document.getElementById("mysortrefill");
 	//alert(viewcontent);
-	var params = "id=jqxgridstate&value="+viewcontent;
+	var params = "id=mysortrefill&value=" + e.options[e.selectedIndex].value + "&id=jqxgridstate&value="+viewcontent;
 
-
+    alert(params);
 //Send the proper header information along with the request
 
 
@@ -42,6 +43,24 @@ xmlhttp.send(params);
 
   this.document.location.href = location;
 }
+
+function datedropdown(name,label, data, id)
+{
+	 this.name 		= name;
+	 this.label		= label;
+	 this.data      = data;
+	 this.id        = parseInt(id);
+	 this.test      = 'bar';
+	 this.render 	= '<div>'+this.label+'<select style="width:75px;" id="'+this.name+'" name="'+this.name+'" onchange="switch(document.getElementById(\''+this.name+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.name+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+     this.refillfilter = refillfilter;
+	 
+	 
+	 function refillfilter(days){
+	    alert('me');
+	 }
+	
+}
+
 {/literal}
 </script>
 
@@ -50,8 +69,9 @@ xmlhttp.send(params);
 //session_start();
 // store session data
 //if (!empty($_POST['regnamesort'])) $_SESSION['regnamesort']=$_POST['regnamesort'];
-//echo "session >>>>>>>>";
-//if (!empty($_SESSION['jqxgridstate'])) var_dump($_SESSION['jqxgridstate']);
+echo "session >>>>>>>>";
+if (!empty($_SESSION['jqxgridstate'])) var_dump($_SESSION['jqxgridstate']);
+if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 //var_dump($_SESSION);
 {/php}
 
@@ -98,19 +118,20 @@ xmlhttp.send(params);
 
 <body class='default'>
 
-<input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}">
+<input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}"/>
   
         <div id="jqxgrid"></div>
         
 
 
-<input value = "Sort" type="button" onclick="$('#jqxgrid').jqxGrid('sortby', 'patientname', 'asc');">  </input>
-<input id="refresh" type="button" value="Refresh Data" />
-<input id="activecheck" type="checkbox" value="inactive" onclick="activefilter(this.checked);"> Include Inactive patients </input>
-<input type="button" id="saveState" value="Save State" />
-<input type="button" id="loadState" value="Load State" />
 
-<div id="patidxx"class="dropdown dropdown-tip"> <ul class="dropdown-menu"> <li><a href="./index.php?module=REG_Patient&action=PrescriptionRefill&record=1">Refill</a></li>  <li><a href="./index.php?module=REG_Patient&action=PatientEncounter&record=2">Encounter</a></li></ul> </div><input type="button" value="Action" data-dropdown="#patidxx" class="">
+<input id="inactivecheck" type="checkbox" value="inactive" onclick="inactivefilter(this.checked);"> Include Inactive patients </input>
+<!--input value = "Sort" type="button" onclick="$('#jqxgrid').jqxGrid('sortby', 'patientname', 'asc');">  </input>
+<input id="refresh" type="button" value="Refresh Data" />
+<input type="button" id="saveState" value="Save State" />
+<input type="button" id="loadState" value="Load State" /-->
+
+
 </body>
 
 
@@ -144,7 +165,13 @@ xmlhttp.send(params);
 
 	}
 	
-	function activefilter(inactiveflag) {
+	var ddarray = new Array();
+	
+	var dd = new datedropdown('value', 'label', 'data', '0');
+	ddarray.push(dd);
+	ddarray[0].refillfilter(1);
+	
+	function inactivefilter(inactiveflag) {
 	
       
 	  var filtergroup = new $.jqx.filter();
@@ -169,7 +196,12 @@ xmlhttp.send(params);
 
 				
 	var data = new Array();
-	var i = 0
+	var i = 0;
+
+	//alert('done');
+	
+	 
+	
 	
 	{/literal}
 	{foreach name=myrowIteration from=$mydata key=id item=myrowData}
@@ -191,7 +223,7 @@ xmlhttp.send(params);
 	{/foreach}
 
 	{literal}
-	
+
 	var source =
 	{
 		localdata: data,
@@ -225,6 +257,7 @@ xmlhttp.send(params);
 		return '<div>Refill <select style="width:75px;" id="mysortrefill" name="mysortrefill" onchange="switch(document.getElementById(\'mysortrefill\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7, \'rx\'); break;  case 2: refillfilter(14, \'rx\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';
 	if (value == 'UTS')
 		return '<div>UTS<select style="width:75px;" id="mysortuts" name="mysortuts" onchange="switch(document.getElementById(\'mysortuts\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'uts\', true); break;  case 1: refillfilter(7, \'uts\'); break;  case 2: refillfilter(14, \'uts\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>	</select></div>';
+	if (value == 'Next PCP') return ddarray[0].render;
 	}
 	
 	
@@ -252,9 +285,24 @@ xmlhttp.send(params);
 		]//,			groups: ['PCP']
 	})
 	
-	 
-	$("#jqxgrid").jqxGrid('loadstate',JSON.parse(document.getElementById("testjson").value));
-	 $("#refresh").jqxButton();
+	var myprevstate = document.getElementById("testjson").value;
+    var setinactive = false;	 //default is false
+	
+	if (myprevstate != "") 
+	 {
+	   $("#jqxgrid").jqxGrid('loadstate',JSON.parse(myprevstate));
+	
+		var filtersinfo = $('#jqxgrid').jqxGrid('getfilterinformation');
+		var setinactive = true;  //if previous state, need to check if previous state set inactive
+		for (var j=0;j<filtersinfo.length;j++)
+		{ 
+			alert(filtersinfo[j].filtercolumn);
+			if (filtersinfo[j].filtercolumn == 'active') setinactive = false; // previous state also contained only active records
+		}
+	 }	
+	 else inactivefilter(false);
+	document.getElementById("inactivecheck").checked = setinactive;
+	
 	data.sort(function(a,b) {
 	 /*if (a.productname < b.productname)
 	   return -1;
@@ -267,7 +315,8 @@ xmlhttp.send(params);
 	 */  
 	 return 0;
 	})
-          
+    
+/*	
 	$("#refresh").click(function () {
 	    data.sort();
 		source.localdata = data.slice(1);
@@ -322,6 +371,7 @@ xmlhttp.send(params);
 		
         if (refilldaysselect == 7) $("#mysortrx").val("Refill7");
 	});
+*/
 	
 	}); //window load function
 
