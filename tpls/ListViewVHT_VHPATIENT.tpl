@@ -54,7 +54,7 @@ function datedropdown(name,label, data, id, prev)
 	 this.id        = parseInt(id);
 	 this.params   = 'bar';
 	 this.previous  = prev;
-	 this.render 	= '<div>'+this.label+'<select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+	 this.render 	= '<div><p>'+this.label+'</p><select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
      this.refillfilter = refillfilter;
 	 this.sessionparam = sessionparam;
 	 this.renderprevious = renderprevious;
@@ -142,7 +142,23 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 
 <!-- -->
 
+	
 <body class='default'>
+	<style> {literal}
+        .green:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .green:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: #b6ff00;
+        }
+        .yellow:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .yellow:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: yellow;
+        }
+        .red:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected), .jqx-widget .red:not(.jqx-grid-cell-hover):not(.jqx-grid-cell-selected) {
+            color: black;
+            background-color: #e83636;
+        }
+	
+    </style> {/literal}
 
 <input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}"/>
   
@@ -244,6 +260,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		row["next_pcp"] 	= "{$myrowData.next_pcp}";
 		row["pcp"] 			= "{$myrowData.provname}";
 		row["action"] 		= "{$myrowData.patid}";
+		row["risk"] 		= {if ( $myrowData.risk  >= 0 AND  $myrowData.risk  < 4  )} "LOW" {/if} {if ( $myrowData.risk  >= 4 AND  $myrowData.risk  < 7  )} "MODERATE" {/if}  {if ( $myrowData.risk  >= 7   )} "HIGH" {/if} ;
 		data[i] = row;
 	    i = i + 1;
 	{/foreach}
@@ -261,8 +278,9 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 					{ name: 'mrn', type: 'string' },
                     { name: 'refill', type: 'date' },
                     { name: 'uts', type: 'date' },
-					 { name: 'next_pcp', type: 'date' },
+					{ name: 'next_pcp', type: 'date' },
                     { name: 'pcp', type: 'string'},
+					{name: 'risk', type: 'string'},
                     { name: 'action', type: 'string' }
                 ],
 		datatype: "array",
@@ -280,10 +298,11 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	//return '<div style="text-align: center; margin-top: 5px;">' + value + '</div>';
 
 	if (value == 'Refill')
-		return '<div>Refill <select style="width:75px;" id="mysortrefill" name="mysortrefill" onchange="switch(document.getElementById(\'mysortrefill\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7, \'rx\'); break;  case 2: refillfilter(14, \'rx\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';
+		return '<div>Refill <select style="width:75px;" id="mysortrefill" name="mysortrefill" onclick="event.stopPropagation();" onchange="switch(document.getElementById(\'mysortrefill\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7, \'rx\'); break;  case 2: refillfilter(14, \'rx\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';
 	if (value == 'UTS')
 		return '<div>UTS<select style="width:75px;" id="mysortuts" name="mysortuts" onchange="switch(document.getElementById(\'mysortuts\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'uts\', true); break;  case 1: refillfilter(7, \'uts\'); break;  case 2: refillfilter(14, \'uts\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>	</select></div>';
 	if (value == 'Next PCP') return ddarray[0].render;
+	if (value == 'Patient Name') return '<p>Patient</p> <p> Name </p>';
 	}
 	
 	
@@ -291,26 +310,43 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	var dataAdapter = new $.jqx.dataAdapter(source);
 	$("#jqxgrid").jqxGrid(
 	{
+		columnsheight: 35,
+		//rowsheight: '30px',
 		width: 1200,
+		height: 250,
 		source: dataAdapter,
 		showfilterrow: true,
 		groupable: true,
 		sortable: true,
 		filterable: true,
+		columnsmenu:false,
 		
 		columns: [
 		    { text: 'Active', filtertype: 'textbox', hidden: true, filtercondition: 'starts_with', datafield: 'active', width: 20,sortable: true },
 			{ text: 'Location', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'location', width: 60,sortable: true },
-			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 160,sortable: true },
+			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 160, renderer:columnsrenderer, sortable: true },
 			{ text: 'MRN', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'mrn', width: 100},
 			{ text: 'Refill', filtertype: 'date', datafield: 'refill', width: 160, cellsformat: 'd', renderer:columnsrenderer, sortable:true },
 			{ text: 'UTS', filtertype: 'date', datafield: 'uts',  width: 160,   cellsformat: 'd', renderer:columnsrenderer, sortable:false },
 			{ text: 'Next PCP', filtertype: 'date', datafield: 'next_pcp',  width: 160,   cellsformat: 'd', renderer:columnsrenderer, sortable:false },
 			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 160, cellsalign: 'right', cellsformat: 'c2' },
-			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer }
+			{ text: 'Risk Level', datafield: 'risk', filtertype: 'list', filteritems: ['LOW', 'MODERATE', 'HIGH'], width: 100},
+			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer, filterable:false, sortable:false }
 		]//,			groups: ['PCP']
 	})
-	
+	$("#jqxgrid").on("columnclick", function (event) {
+                var column = event.args.datafield;
+                var headerNumber;
+                for (var i = 0; i < source.datafields.length; i++) {
+                    if (column == source.datafields[i].name) {
+                        headerNumber = i;
+                        break;
+                    };
+                };
+                $("#jqxgrid .jqx-grid-column-header:eq(" + headerNumber + ")").css("background-color", "Red");
+				event.stopPropagation();
+				return false;
+            });
 	var myprevstate = document.getElementById("testjson").value;
     var setinactive = false;	 //default is false
 	
