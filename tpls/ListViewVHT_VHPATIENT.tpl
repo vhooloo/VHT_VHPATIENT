@@ -5,6 +5,7 @@
  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
 <!-- --GRID -->
 <link rel="stylesheet" href="custom/topcarejs/jqwidgets/styles/jqx.base.css" type="text/css" />
+<link rel="stylesheet" href="custom/topcarejs/jqwidgets/styles/jqx.office.css" type="text/css" />
 
 <script type="text/javascript" src="custom/topcarejs/jquery.dropdown.js"></script>
 
@@ -54,7 +55,7 @@ function datedropdown(name,label, data, id, prev)
 	 this.id        = parseInt(id);
 	 this.params   = 'bar';
 	 this.previous  = prev;
-	 this.render 	= '<div><p>'+this.label+'</p><select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+	 this.render 	= '<div style="text-align: center; margin-top: 5px;font-weight:bold;" ><p><b>'+this.label+'</b></p><select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onclick="event.stopPropagation();" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
      this.refillfilter = refillfilter;
 	 this.sessionparam = sessionparam;
 	 this.renderprevious = renderprevious;
@@ -157,14 +158,18 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
             color: black;
             background-color: #e83636;
         }
-	
+		
+		.jqx-widget-office {
+			font-family: Verdana;
+			font-size:12px;
+		}
     </style> {/literal}
 
 <input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}"/>
-  
-        <div id="jqxgrid"></div>
+  <div id='jqxWidget' style="font-size: 8px; font-family: Verdana; float: left;">
+        <div id="jqxgrid" style="font-size: 8px; font-family: Verdana; float: left;" ></div>
         
-
+  </div>
 
 
 <input id="inactivecheck" type="checkbox" value="inactive" onclick="inactivefilter(this.checked);"> Include Inactive patients </input>
@@ -209,9 +214,10 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	
 	var ddarray = new Array();
 	
-	var dd = new datedropdown('Next PCP', 'Next PCP', 'next_pcp', '0', {/literal}'{$smarty.session.next_pcp}'{literal});
-	ddarray.push(dd);
-	
+	var dd0 = new datedropdown('Next PCP', 'Next PCP', 'next_pcp', '0', {/literal}'{$smarty.session.next_pcp}'{literal});
+	ddarray.push(dd0);
+	var dd1 = new datedropdown('Last UTS', 'Last UTS', 'last_uts', '1', {/literal}'{$smarty.session.last_uts}'{literal});
+	ddarray.push(dd1);
 	
 	function inactivefilter(inactiveflag) {
 	
@@ -257,6 +263,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		row["mrn"] 			= "{$myrowData.mrn}";
 		row["refill"] 		= "{$myrowData.refill}";
 		row["uts"] 			= "{$myrowData.uts}";
+		row["last_uts"] 	= "{$myrowData.last_uts}";
 		row["next_pcp"] 	= "{$myrowData.next_pcp}";
 		row["pcp"] 			= "{$myrowData.provname}";
 		row["action"] 		= "{$myrowData.patid}";
@@ -278,6 +285,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 					{ name: 'mrn', type: 'string' },
                     { name: 'refill', type: 'date' },
                     { name: 'uts', type: 'date' },
+					{ name: 'last_uts', type: 'date' },
 					{ name: 'next_pcp', type: 'date' },
                     { name: 'pcp', type: 'string'},
 					{name: 'risk', type: 'string'},
@@ -302,7 +310,14 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	if (value == 'UTS')
 		return '<div>UTS<select style="width:75px;" id="mysortuts" name="mysortuts" onchange="switch(document.getElementById(\'mysortuts\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'uts\', true); break;  case 1: refillfilter(7, \'uts\'); break;  case 2: refillfilter(14, \'uts\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>	</select></div>';
 	if (value == 'Next PCP') return ddarray[0].render;
-	if (value == 'Patient Name') return '<p>Patient</p> <p> Name </p>';
+	//if (value == 'Patient Name') return '<p>Patient</p> <p> Name </p>';
+	for (var k = 0; k < ddarray.length; k++) {
+		if (value == ddarray[k].name) {
+			return ddarray[k].render;
+			break;
+		};
+	};
+	return '<div style="text-align: center; margin-top: 5px;font-weight:bold;">' + value + '</div>';
 	}
 	
 	
@@ -311,7 +326,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	$("#jqxgrid").jqxGrid(
 	{
 		columnsheight: 35,
-		//rowsheight: '30px',
+		theme: 'office',
 		width: 1200,
 		height: 250,
 		source: dataAdapter,
@@ -319,19 +334,20 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		groupable: true,
 		sortable: true,
 		filterable: true,
-		columnsmenu:false,
+
 		
 		columns: [
-		    { text: 'Active', filtertype: 'textbox', hidden: true, filtercondition: 'starts_with', datafield: 'active', width: 20,sortable: true },
-			{ text: 'Location', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'location', width: 60,sortable: true },
-			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 160, renderer:columnsrenderer, sortable: true },
-			{ text: 'MRN', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'mrn', width: 100},
-			{ text: 'Refill', filtertype: 'date', datafield: 'refill', width: 160, cellsformat: 'd', renderer:columnsrenderer, sortable:true },
-			{ text: 'UTS', filtertype: 'date', datafield: 'uts',  width: 160,   cellsformat: 'd', renderer:columnsrenderer, sortable:false },
-			{ text: 'Next PCP', filtertype: 'date', datafield: 'next_pcp',  width: 160,   cellsformat: 'd', renderer:columnsrenderer, sortable:false },
-			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 160, cellsalign: 'right', cellsformat: 'c2' },
-			{ text: 'Risk Level', datafield: 'risk', filtertype: 'list', filteritems: ['LOW', 'MODERATE', 'HIGH'], width: 100},
-			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer, filterable:false, sortable:false }
+		    { text: 'Active', filtertype: 'textbox', hidden: true, filtercondition: 'starts_with', datafield: 'active', width: 20, renderer:columnsrenderer, sortable: true },
+			{ text: 'Location', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'location', width: 60, renderer:columnsrenderer, sortable: true },
+			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 120, renderer:columnsrenderer, sortable: true },
+			{ text: 'MRN', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'mrn', renderer:columnsrenderer, width: 100},
+			{ text: 'Refill', filtertype: 'date', datafield: 'refill', width: 120, cellsformat: 'M/dd/yy', renderer:columnsrenderer,  sortable:true },
+			{ text: 'UTS', filtertype: 'date', datafield: 'uts',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:false },
+			{ text: 'Last UTS', filtertype: 'date', datafield: 'last_uts',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:true },
+			{ text: 'Next PCP', filtertype: 'date', datafield: 'next_pcp',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:false },
+			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 100,  renderer:columnsrenderer },
+			{ text: 'Risk Level', datafield: 'risk', filtertype: 'list', filteritems: ['LOW', 'MODERATE', 'HIGH'], renderer:columnsrenderer, width: 100},
+			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer, filterable:false, renderer:columnsrenderer, sortable:false }
 		]//,			groups: ['PCP']
 	})
 	$("#jqxgrid").on("columnclick", function (event) {
