@@ -59,14 +59,23 @@ function datedropdown(name,label, data, id, prev)
 	 this.data      = data;
 	 this.id        = parseInt(id);
 	 this.params   = 'bar';
+	 this.selectval = 'ALL';
 	 this.previous  = prev;
-	 this.render 	= '<div style="text-align: center; margin-top: 5px;font-weight:bold;" ><p><b>'+this.label+'</b></p><select style="width:60px;font-size:80%;padding-left:0px;padding-right:0px;z-index:99999;" id="'+this.data+'" name="'+this.data+'" onclick="event.cancelBubble = true;" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+	 this.render 	= '<div style="text-align: center; margin-top: 5px;font-weight:bold;" ><p><b>'+this.label+'</b></p><select style="width:60px;font-size:80%;padding-left:0px;padding-right:0px;z-index:99999;" id="'+this.data+'" name="'+this.data+'" onclick="event.cancelBubble = true;" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option><option value="range" >range</option></select> </div>&nbsp &nbsp';  //function to render html
      this.refillfilter = refillfilter;
 	 this.sessionparam = sessionparam;
 	 this.renderprevious = renderprevious;
+	 this.setrange = setrange;
+	 
+	 function setrange() {
+	   document.getElementById(data).value = "range";
+	   selectval = "range";
+	 }
+	 
 	 
 	 function renderprevious() {
 	   if (prev != "" || prev != undefined )  document.getElementById(this.data).value = this.previous;
+	   selectval = previous;
 	 }
 	 
 	 function refillfilter(days){
@@ -83,6 +92,7 @@ function datedropdown(name,label, data, id, prev)
 	  	filtergroup.addfilter(0, filterbot);
 		filtergroup.addfilter(0, filterhi);
 		$('#jqxgrid').jqxGrid('addfilter', this.data, filtergroup, true);
+		selectval = document.getElementById(this.data).value;
 	}
 	
 	function sessionparam() {
@@ -380,9 +390,24 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	 }	
 	 else inactivefilter(false);
 	document.getElementById("inactivecheck").checked = setinactive;
-	ddarray[0].renderprevious();
+	for (var z = 0; z < ddarray.length; z++) {
+		ddarray[z].renderprevious();
+	}
+	$('#jqxgrid').jqxGrid('applyfilters');
 	
-	data.sort(function(a,b) {
+	$("#jqxgrid").on("filter", function (event) 
+	{   
+		var filterinfo1 = $("#jqxgrid").jqxGrid('getfilterinformation');
+		for (var y=0;y <filterinfo1.length;y++)
+		{   alert(filterinfo1[y].filtercolumn);
+			for (var zz=0;zz<ddarray.length;zz++) {
+				if (filterinfo1[y].filtercolumn == ddarray[zz].data) ddarray[zz].setrange(); //document.getElementById("refill").value = "range";
+		    }
+		}
+	
+		
+	});  
+	//data.sort(function(a,b) {
 	 /*if (a.productname < b.productname)
 	   return -1;
 	 if (a.productname > b.productname)
@@ -392,8 +417,8 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	 if (a.firstname > b.firstname)
 	   return 1;  
 	 */  
-	 return 0;
-	})
+	 //return 0;
+	//})
     
 /*	
 	$("#refresh").click(function () {
