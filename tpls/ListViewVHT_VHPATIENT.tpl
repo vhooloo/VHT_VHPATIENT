@@ -16,10 +16,15 @@ function loadUrl(location)
 
 	var state = $("#jqxgrid").jqxGrid('savestate');
 	var viewcontent = JSON.stringify(state);
-	var e = document.getElementById("mysortrefill");
-	ddarray[0].sessionparam();
+	var params = "&jqxgridstate="+viewcontent;
+	//var e = document.getElementById("mysortrefill");
+	for (var l = 0; l < ddarray.length; l++) {
+		ddarray[l].sessionparam();
+		params = params +  ddarray[l].params;
+	};
+	
 	//alert(viewcontent);
-	var params = "&jqxgridstate="+viewcontent+ddarray[0].params;
+
 	
 
     alert(params);
@@ -55,7 +60,7 @@ function datedropdown(name,label, data, id, prev)
 	 this.id        = parseInt(id);
 	 this.params   = 'bar';
 	 this.previous  = prev;
-	 this.render 	= '<div style="text-align: center; margin-top: 5px;font-weight:bold;" ><p><b>'+this.label+'</b></p><select style="width:75px;" id="'+this.data+'" name="'+this.data+'" onclick="event.stopPropagation();" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
+	 this.render 	= '<div style="text-align: center; margin-top: 5px;font-weight:bold;" ><p><b>'+this.label+'</b></p><select style="width:60px;font-size:80%;padding-left:0px;padding-right:0px;z-index:99999;" id="'+this.data+'" name="'+this.data+'" onclick="event.cancelBubble = true;" onchange="switch(document.getElementById(\''+this.data+'\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \''+this.data+'\', true); break;  case 1: ddarray['+this.id+'].refillfilter(7); break;  case 2: alert(\'doh\');break;}"> <option value="ALL"  selected>ALL</option><option value="Refill7" >7 Days</option><option value="Refill14" >14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';  //function to render html
      this.refillfilter = refillfilter;
 	 this.sessionparam = sessionparam;
 	 this.renderprevious = renderprevious;
@@ -159,20 +164,19 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
             background-color: #e83636;
         }
 		
-		.jqx-widget-office {
+		.jqx-widget-content {
 			font-family: Verdana;
-			font-size:12px;
+			font-size:80%;
 		}
     </style> {/literal}
 
-<input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}"/>
-  <div id='jqxWidget' style="font-size: 8px; font-family: Verdana; float: left;">
-        <div id="jqxgrid" style="font-size: 8px; font-family: Verdana; float: left;" ></div>
-        
-  </div>
-
-
 <input id="inactivecheck" type="checkbox" value="inactive" onclick="inactivefilter(this.checked);"> Include Inactive patients </input>
+<input name="testjson" id = "testjson" type = "hidden"  value="{$smarty.session.jqxgridstate nofilter}"/>
+
+        <div id="jqxgrid"  ></div>
+        
+
+
 <!--input value = "Sort" type="button" onclick="$('#jqxgrid').jqxGrid('sortby', 'patientname', 'asc');">  </input>
 <input id="refresh" type="button" value="Refresh Data" />
 <input type="button" id="saveState" value="Save State" />
@@ -218,6 +222,10 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	ddarray.push(dd0);
 	var dd1 = new datedropdown('Last UTS', 'Last UTS', 'last_uts', '1', {/literal}'{$smarty.session.last_uts}'{literal});
 	ddarray.push(dd1);
+	var dd2 = new datedropdown('UTS', 'UTS', 'uts', '2', {/literal}'{$smarty.session.uts}'{literal});
+	ddarray.push(dd2);
+	var dd3 = new datedropdown('Refill', 'Refill', 'refill', '3', {/literal}'{$smarty.session.refill}'{literal});
+	ddarray.push(dd3);
 	
 	function inactivefilter(inactiveflag) {
 	
@@ -259,7 +267,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		var row = {literal} {} {/literal};
 		row["active"]		= "{$myrowData.active}";
 		row["location"] 	= "{$myrowData.location}";
-		row["patientname"] 	= "{$myrowData.lname}, {$myrowData.fname}" ;
+		row["patientname"] 	= "{$myrowData.lname}, {$myrowData.fname}//{$myrowData.patid}" ;
 		row["mrn"] 			= "{$myrowData.mrn}";
 		row["refill"] 		= "{$myrowData.refill}";
 		row["uts"] 			= "{$myrowData.uts}";
@@ -305,11 +313,11 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	var columnsrenderer = function (value) {
 	//return '<div style="text-align: center; margin-top: 5px;">' + value + '</div>';
 
-	if (value == 'Refill')
-		return '<div>Refill <select style="width:75px;" id="mysortrefill" name="mysortrefill" onclick="event.stopPropagation();" onchange="switch(document.getElementById(\'mysortrefill\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7, \'rx\'); break;  case 2: refillfilter(14, \'rx\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';
-	if (value == 'UTS')
-		return '<div>UTS<select style="width:75px;" id="mysortuts" name="mysortuts" onchange="switch(document.getElementById(\'mysortuts\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'uts\', true); break;  case 1: refillfilter(7, \'uts\'); break;  case 2: refillfilter(14, \'uts\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>	</select></div>';
-	if (value == 'Next PCP') return ddarray[0].render;
+	//if (value == 'Refill')
+	//	return '<div>Refill <select style="width:75px;" id="mysortrefill" name="mysortrefill" onclick="if(event.stopPropagation)event.stopPropagation();else event.cancelBubble=true;" onchange="switch(document.getElementById(\'mysortrefill\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'refill\', true); break;  case 1: refillfilter(7, \'rx\'); break;  case 2: refillfilter(14, \'rx\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>&nbsp &nbsp</select> </div>&nbsp &nbsp';
+	//if (value == 'UTS')
+	//	return '<div>UTS<select style="width:75px;" id="mysortuts" name="mysortuts" onchange="switch(document.getElementById(\'mysortuts\').selectedIndex) { case 0: $(\'#jqxgrid\').jqxGrid(\'removefilter\', \'uts\', true); break;  case 1: refillfilter(7, \'uts\'); break;  case 2: refillfilter(14, \'uts\');break;}"> <option value="Action"  selected>ALL</option><option value="Refill7" >Next 7 Days</option><option value="Refill14" >Next 14 Days</option>	</select></div>';
+	//if (value == 'Next PCP') return ddarray[0].render;
 	//if (value == 'Patient Name') return '<p>Patient</p> <p> Name </p>';
 	for (var k = 0; k < ddarray.length; k++) {
 		if (value == ddarray[k].name) {
@@ -320,6 +328,10 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 	return '<div style="text-align: center; margin-top: 5px;font-weight:bold;">' + value + '</div>';
 	}
 	
+	var patientrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+			 var res = value.split("//");
+             return   '<a href="./index.php?module=REG_Patient&action=DetailView&record='+ res[1] +'">' + res[0] + '</a>';
+    }
 	
 			 
 	var dataAdapter = new $.jqx.dataAdapter(source);
@@ -328,7 +340,7 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		columnsheight: 35,
 		theme: 'office',
 		width: 1200,
-		height: 250,
+		height: 600,
 		source: dataAdapter,
 		showfilterrow: true,
 		groupable: true,
@@ -339,30 +351,18 @@ if (!empty($_SESSION['mysortrefill'])) var_dump($_SESSION['mysortrefill']);
 		columns: [
 		    { text: 'Active', filtertype: 'textbox', hidden: true, filtercondition: 'starts_with', datafield: 'active', width: 20, renderer:columnsrenderer, sortable: true },
 			{ text: 'Location', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'location', width: 60, renderer:columnsrenderer, sortable: true },
-			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 120, renderer:columnsrenderer, sortable: true },
+			{ text: 'Patient Name', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'patientname', width: 120, renderer:columnsrenderer, sortable: true, cellsrenderer:patientrenderer },
 			{ text: 'MRN', filtertype: 'textbox', filtercondition: 'starts_with', datafield: 'mrn', renderer:columnsrenderer, width: 100},
 			{ text: 'Refill', filtertype: 'date', datafield: 'refill', width: 120, cellsformat: 'M/dd/yy', renderer:columnsrenderer,  sortable:true },
 			{ text: 'UTS', filtertype: 'date', datafield: 'uts',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:false },
 			{ text: 'Last UTS', filtertype: 'date', datafield: 'last_uts',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:true },
 			{ text: 'Next PCP', filtertype: 'date', datafield: 'next_pcp',  width: 120,   cellsformat: 'M/dd/yy', renderer:columnsrenderer, sortable:false },
-			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 100,  renderer:columnsrenderer },
+			{ text: 'PCP', datafield: 'pcp', filtertype: 'textbox', width: 120,  renderer:columnsrenderer },
 			{ text: 'Risk Level', datafield: 'risk', filtertype: 'list', filteritems: ['LOW', 'MODERATE', 'HIGH'], renderer:columnsrenderer, width: 100},
 			{ text: 'Action', datafield: 'action',  width: 100,  cellsrenderer:linkrenderer, filterable:false, renderer:columnsrenderer, sortable:false }
 		]//,			groups: ['PCP']
 	})
-	$("#jqxgrid").on("columnclick", function (event) {
-                var column = event.args.datafield;
-                var headerNumber;
-                for (var i = 0; i < source.datafields.length; i++) {
-                    if (column == source.datafields[i].name) {
-                        headerNumber = i;
-                        break;
-                    };
-                };
-                $("#jqxgrid .jqx-grid-column-header:eq(" + headerNumber + ")").css("background-color", "Red");
-				event.stopPropagation();
-				return false;
-            });
+
 	var myprevstate = document.getElementById("testjson").value;
     var setinactive = false;	 //default is false
 	
