@@ -1,28 +1,33 @@
 <?PHP
 
-require_once('custom/modules/VHT_VHPATIENT/VHT_VHPATIENTTopListView.php');
-require_once('custom/modules/VHT_VHPATIENT/VHT_VHPATIENTListView.php');
+//require_once('custom/modules/VHT_VHPATIENT/VHT_VHPATIENTTopListView.php');
+//require_once('custom/modules/VHT_VHPATIENT/VHT_VHPATIENTListView.php');
 //require_once('custom/modules/VHT_VHPATIENT/VHT_VHPATIENT.php');
 require_once('include/MVC/View/views/view.list.php');
 
-class VHT_VHPATIENTController extends SugarController {
+class REGR_TopReportsController extends SugarController {
 /*** when we call MassUpdate with $addAllBeanFields then it will use this in the query.
 *
 * @param
 */
 	function action_listview() {
 		
-		$this->view = 'list';
+		$this->view = 'reportmain';
 	//	$x=1;
 	//	$GLOBALS['log']->fatal('in controller');
-		$this->bean = new VHT_VHPATIENTListView();
+	//	$this->bean = new VHT_VHPATIENTListView();
 	}
 	
-	function action_topcare() {
+	//function action_topcare() {
 		
-		$this->view = 'toplist';
-	    $this->bean = new VHT_VHPATIENTListView();
-	}
+	//	$this->view = 'toplist';
+	//    $this->bean = new VHT_VHPATIENTListView();
+	//}
 	
+	function action_reportmedd() {
+		
+		$this->view = 'reportmedd';
+	    
+	}
 }
 ?>
